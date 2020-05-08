@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, roc_curve, auc
 from statistics import stdev
 import matplotlib.pyplot as plt
 from nltk.cluster import KMeansClusterer, cosine_distance
-# from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.decomposition import FastICA
 
 
 def multi_classify(clusterer, X_test):
@@ -15,7 +15,7 @@ def multi_classify(clusterer, X_test):
     for query in X_test.toarray():
         cluster = clusterer.classify(query)
         clusters.append(cluster)
-        
+
     return clusters
 
 
@@ -44,6 +44,15 @@ le.fit(df_train['category'])
 y_train = le.transform(df_train['category'])
 y_test = le.transform(df_test['category'])
 
+
+transformer = FastICA(n_components=2, random_state=0)
+X_transformed = transformer.fit_transform(X_train_count.toarray())
+print(X_transformed)
+
+plt.quiver(*X_transformed, V[:,0], V[:,1], color=['r','b','g'], scale=21)
+plt.show()
+
+exit()
 ################################### CountVectorizer ####################################
 clusterer = KMeansClusterer(5, distance=cosine_distance)
 clusters = clusterer.cluster(X_train_count.toarray(), True)
