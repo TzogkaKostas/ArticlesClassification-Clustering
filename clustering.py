@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from nltk.cluster import KMeansClusterer, cosine_distance
 from sklearn.decomposition import PCA
 from matplotlib.pyplot import figure
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
 
 
 def multi_classify(clusterer, X_test):
@@ -25,7 +27,6 @@ def get_indices(array, value):
 def plot_data(clusters, k, points, categories, method_name):
 	colours = ['red', 'blue', 'green', 'black', 'pink']
 	markers = ['$B$', '$E$', '$P$', '$S$', '$T$']
-	figure(figsize=(10, 10))
 	for i in range(k):
 		indices = get_indices(clusters, i)
 		cluster_i = points[get_indices(clusters, i)]
@@ -36,10 +37,28 @@ def plot_data(clusters, k, points, categories, method_name):
 	plt.xlabel('X')
 	plt.ylabel('Y')
 	plt.title(method_name)
-	plt.legend()
+
+	red_patch = mpatches.Patch(color='red', label='cluster 0')
+	blue_patch = mpatches.Patch(color='blue', label='cluster 1')
+	green_patch = mpatches.Patch(color='green', label='cluster 2')
+	black_patch = mpatches.Patch(color='black', label='cluster 3')
+	pink_patch = mpatches.Patch(color='pink', label='cluster 4')
+
+	b_mark = mlines.Line2D([], [], color='gray', marker='$B$',
+		markersize=8, label='Business', linestyle='None')
+	e_mark = mlines.Line2D([], [], color='gray', marker='$E$',
+		markersize=8, label='Entertainment', linestyle='None')
+	p_mark = mlines.Line2D([], [], color='gray', marker='$P$',
+		markersize=8, label='politics', linestyle='None')
+	s_mark = mlines.Line2D([], [], color='gray', marker='$S$',
+		markersize=8, label='Sport', linestyle='None')
+	t_mark = mlines.Line2D([], [], color='gray', marker='$T$',
+		markersize=8, label='Tech', linestyle='None')
+	
+	plt.legend(handles=[red_patch, blue_patch, green_patch, black_patch,
+			pink_patch, b_mark, e_mark, p_mark, s_mark, t_mark])
 	plt.show()
 	plt.savefig(method_name + '.png')
-
 
 
 # read data
@@ -70,7 +89,10 @@ transformer = PCA(random_state=2020)
 pca_data = transformer.fit_transform(X_train_count.toarray())
 
 # plot data
-plot_data(clusters, 5, pca_data, y_train, 'pca_tfidf')
+plt.figure(num=1, figsize=(10, 10))
+plt.xlim([-6, 20])
+plt.ylim([-20, 20])
+plot_data(clusters, 5, pca_data, y_train, 'pca_count')
 
 
 ######### TfidfVectorizer #########
@@ -83,9 +105,8 @@ transformer = PCA(random_state=2020)
 pca_data = transformer.fit_transform(X_train_tfidf.toarray())
 
 # plot data
-plt.xlim([-6, 20])
-plt.ylim([-20, 20])
-plot_data(clusters, 5, pca_data, y_train, 'pca_count')
+plt.figure(num=2, figsize=(10, 10))
+plot_data(clusters, 5, pca_data, y_train, 'pca_tfidf')
 
 
 
