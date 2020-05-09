@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn import svm, preprocessing, metrics
+from sklearn import svm, preprocessing
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -13,6 +13,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from itertools import groupby
 from operator import itemgetter
 from collections import Counter
+import scikitplot as skplt
+from sklearn.model_selection import cross_val_predict
+from itertools import cycle
 
 
 class KNN_classifier(BaseEstimator, ClassifierMixin):
@@ -68,21 +71,21 @@ def evaluation(clf, X_train, y_train, y_test, predictions):
 
 # read data
 df_train = pd.read_csv("train_set.csv", sep='\t')
-df_train['full_data'] = df_train['title'].fillna('') + " " + df_train['content'].fillna('')
+# df_train['full_data'] = df_train['title'].fillna('') + " " + df_train['content'].fillna('')
 
 df_test = pd.read_csv("test_set.csv", sep='\t')
-df_test['full_data'] = df_test['title'].fillna('') + " " + df_test['content'].fillna('')
+# df_test['full_data'] = df_test['title'].fillna('') + " " + df_test['content'].fillna('')
 
 
 # vectorization by CountVectorizer
 count_vectorizer = CountVectorizer(stop_words='english')
-X_train_count = count_vectorizer.fit_transform(df_train['full_data'])
-X_test_count = count_vectorizer.transform(df_test['full_data'])
+X_train_count = count_vectorizer.fit_transform(df_train['content'])
+X_test_count = count_vectorizer.transform(df_test['content'])
 
 # vectorization by TfidfVectorizer
 tfidf_vectorizer = TfidfVectorizer(stop_words='english')
-X_train_tfidf = tfidf_vectorizer.fit_transform(df_train['full_data'])
-X_test_tfidf = tfidf_vectorizer.transform(df_test['full_data'])
+X_train_tfidf = tfidf_vectorizer.fit_transform(df_train['content'])
+X_test_tfidf = tfidf_vectorizer.transform(df_test['content'])
 
 # labels
 le = preprocessing.LabelEncoder()
@@ -90,17 +93,50 @@ le.fit(df_train['category'])
 y_train = le.transform(df_train['category'])
 y_test = le.transform(df_test['category'])
 
-# #################################### SVM ####################################
-# ######### CountVectorizer #########
-# # fit
-# clf = svm.SVC()
-# clf.fit(X_train_count, y_train)
 
-# # predict
-# predictions_count = clf.predict(X_test_count)
+#################################### SVM ####################################
+######### CountVectorizer #########
+# fit
+clf = svm.SVC(probability=True)
+clf.fit(X_train_count, y_train)
 
-# # print evaluations scores
-# print("SUPPORT VECTOR MACHINES (Bow):")
+# predict
+predictions_count = clf.predict(X_test_count)
+
+# print evaluations scores
+print("SUPPORT VECTOR MACHINES (Bow):")
+
+from sklearn.preprocessing import label_binarize
+
+# Binarize the output
+y_bin = label_binarize(y_train, classes=[0, 1, 2, 3, 4])
+n_classes = y_bin.shape[1]
+
+y_score = cross_val_predict(clf, X_train_count, y_train, cv=10 ,method='predict_proba')
+
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(y_bin[:, i], y_score[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+colors = cycle(['blue', 'red', 'green'])
+for i, color in zip(range(n_classes), colors):
+    plt.plot(fpr[i], tpr[i], color=color,
+             label='ROC curve of class {0} (area = {1:0.2f})'
+             ''.format(i, roc_auc[i]))
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlim([-0.05, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver operating characteristic for multi-class data')
+plt.legend(loc="lower right")
+plt.show()
+plt.savefig('roc_plot.png')
+
+
+exit()
 # evaluation(clf, X_train_count, y_train, y_test, predictions_count)
 
 # ######### TfidfVectorizer #########
@@ -170,28 +206,28 @@ y_test = le.transform(df_test['category'])
 # evaluation(clf, X_train_tfidf.toarray(), y_train, y_test, predictions_count)
 # print("\n")
 
-################################### KNN ####################################
-######### CountVectorizer #########
-# fit
-clf = KNN_classifier(5)
-clf.fit(X_train_count, y_train)
+# ################################### KNN ####################################
+# ######### CountVectorizer #########
+# # fit
+# clf = KNN_classifier(5)
+# clf.fit(X_train_count, y_train)
 
-# predict
-predictions_count = clf.predict(X_test_count)
+# # predict
+# predictions_count = clf.predict(X_test_count)
 
-# print evaluations scores
-print("k-nearest neighbors (Bow):")
-evaluation(clf, X_train_count, y_train, y_test, predictions_count)
+# # print evaluations scores
+# print("k-nearest neighbors (Bow):")
+# evaluation(clf, X_train_count, y_train, y_test, predictions_count)
 
-######### TfidfVectorizer #########
-# fit
-clf = KNN_classifier(5)
-clf.fit(X_train_tfidf, y_train)
+# ######### TfidfVectorizer #########
+# # fit
+# clf = KNN_classifier(5)
+# clf.fit(X_train_tfidf, y_train)
 
-# predict
-predictions_count = clf.predict(X_test_tfidf)
+# # predict
+# predictions_count = clf.predict(X_test_tfidf)
 
-# print evaluations scores
-print("k-nearest neighbors (TfIdf):")
-evaluation(clf, X_train_tfidf, y_train, y_test, predictions_count)
-print("\n")
+# # print evaluations scores
+# print("k-nearest neighbors (TfIdf):")
+# evaluation(clf, X_train_tfidf, y_train, y_test, predictions_count)
+# print("\n")
