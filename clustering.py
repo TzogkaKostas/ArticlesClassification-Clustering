@@ -63,6 +63,7 @@ def plot_data(clusters, k, points, categories, method_name):
 
 # read data
 df_train = pd.read_csv("train_set.csv", sep='\t')
+df_train['content'] = df_train['content'].str.replace('\.|\,', '', regex=True)
 
 
 # vectorization by CountVectorizer

@@ -9,18 +9,19 @@ def read_title_from_file(file_name):
 
 def read_content_from_file(file_name):
 	with open(file_name, 'rb') as f:
-		return f.read()[1:]
+		next(f)
+		return f.read()
 
 def create_dataframe():
 	rootDir = '../fulltext/data'
 	df = pd.DataFrame(columns=['id', 'title', 'content', 'category'])
-	id = 0
+	id = 1
 	for dirName, subdirList, fileList in os.walk(rootDir):
 		category = os.path.basename(dirName)
 		for fname in fileList:
 			file_name = dirName + "/" + fname
 			title = read_title_from_file(file_name).decode('utf-8').rstrip('\n')
-			content = read_content_from_file(file_name).decode('ISO-8859-1')
+			content = read_content_from_file(file_name).decode('ISO-8859-1').replace('\n', ' ')
 			df = df.append([{'id':id,  'title':title, 'content':content, 'category':category}],
 				ignore_index=True)
 			id += 1

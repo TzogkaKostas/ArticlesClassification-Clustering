@@ -15,20 +15,19 @@ def create_wordcloud(name, string):
 	fig.savefig(name, dpi=1200)
 
 df_data = pd.read_csv("data.csv", sep='\t')
-
-df_data['full_data'] = df_data['title'].fillna('') + " " + df_data['content'].fillna('')
+df_data['content'] = df_data['content'].str.replace('\.|\,', '', regex=True)
 
 create_wordcloud("wordcloud_business.png",
-    df_data[df_data['category'] == 'business']['full_data'].dropna().to_string())
+    df_data[df_data['category'] == 'business']['content'].dropna().to_string())
 
 create_wordcloud("wordcloud_entertain.png",
-    df_data[df_data['category'] == 'entertainment']['full_data'].dropna().to_string())
+    df_data[df_data['category'] == 'entertainment']['content'].dropna().to_string())
 
 create_wordcloud("wordcloud_politics.png",
-    df_data[df_data['category'] == 'politics']['full_data'].dropna().to_string())
+    df_data[df_data['category'] == 'politics']['content'].dropna().to_string())
 
 create_wordcloud("wordcloud_sport.png",
-    df_data[df_data['category'] == 'sport']['full_data'].dropna().to_string())
+    df_data[df_data['category'] == 'sport']['content'].dropna().to_string())
 
 create_wordcloud("wordcloud_tech.png",
-    df_data[df_data['category'] == 'tech']['full_data'].dropna().to_string())
+    df_data[df_data['category'] == 'tech']['content'].dropna().to_string())
