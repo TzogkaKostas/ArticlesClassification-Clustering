@@ -11,6 +11,7 @@ from sklearn.decomposition import PCA
 from matplotlib.pyplot import figure
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
+from gensim.models import Word2Vec
 
 
 def multi_classify(clusterer, X_test):
@@ -60,27 +61,67 @@ def plot_data(clusters, k, points, categories, method_name):
 	plt.show()
 	plt.savefig(method_name + '.png')
 
+def get_vectors_from_w2v(model, docs):
+	vectors = []
+	for doc in docs:
+		vec = []
+		for word in doc.split():
+			mean_value = np.mean(model[word])
+			vec.append(mean_value)
+		vectors.append(vec)
+
+	return vectors
+
+
 
 # read data
 df_train = pd.read_csv("train_set.csv", sep='\t')
 df_train['content'] = df_train['content'].str.replace('\.|\,', '', regex=True)
-
-
-# vectorization by CountVectorizer
-count_vectorizer = CountVectorizer(stop_words='english')
-X_train_count = count_vectorizer.fit_transform(df_train['content'])
-
-# vectorization by TfidfVectorizer
-tfidf_vectorizer = TfidfVectorizer(stop_words='english')
-X_train_tfidf = tfidf_vectorizer.fit_transform(df_train['content'])
 
 # labels
 le = preprocessing.LabelEncoder()
 le.fit(df_train['category'])
 y_train = le.transform(df_train['category'])
 
+######### document-embeddings #########
+tokenized_tweet = df_train['content'].apply(lambda x: x.split()) # tokenizing
+model_w2v = Word2Vec(tokenized_tweet,
+	size=200, # desired no. of features/independent variables
+	window=5, # context window size
+	min_count=2,
+	sg = 1, # 1 for skip-gram model
+	hs = 0,
+	negative = 10, # for negative sampling
+	workers= 2, # no.of cores
+	seed = 34)
+
+model_w2v.train(tokenized_tweet, total_examples= df_train['content'].shape[0], epochs=20)
+
+# vectorization 
+vectors = get_vectors_from_w2v(model_w2v, df_train['content'])
+
+# clustering
+clusterer = KMeansClusterer(5, distance=cosine_distance)
+clusters = clusterer.cluster(vectors, True)
+
+# dimension reductionality
+transformer = PCA(random_state=2020)
+pca_data = transformer.fit_transform(vectors)
+
+# plot data
+plt.figure(num=3, figsize=(10, 10))
+plot_data(clusters, 5, pca_data, y_train, 'w2v')
+
+
+
+exit()
+
 
 ######### CountVectorizer #########
+# vectorization by CountVectorizer
+count_vectorizer = CountVectorizer(stop_words='english')
+X_train_count = count_vectorizer.fit_transform(df_train['content'])
+
 # clustering
 clusterer = KMeansClusterer(5, distance=cosine_distance)
 clusters = clusterer.cluster(X_train_count.toarray(), True)
@@ -97,6 +138,10 @@ plot_data(clusters, 5, pca_data, y_train, 'pca_count')
 
 
 ######### TfidfVectorizer #########
+# vectorization by TfidfVectorizer
+tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+X_train_tfidf = tfidf_vectorizer.fit_transform(df_train['content'])
+
 # clustering
 clusterer = KMeansClusterer(5, distance=cosine_distance)
 clusters = clusterer.cluster(X_train_tfidf.toarray(), True)
@@ -108,7 +153,6 @@ pca_data = transformer.fit_transform(X_train_tfidf.toarray())
 # plot data
 plt.figure(num=2, figsize=(10, 10))
 plot_data(clusters, 5, pca_data, y_train, 'pca_tfidf')
-
 
 
 # print(clusterer.classify(X_test_count.toarray()))
