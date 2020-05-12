@@ -12,6 +12,7 @@ from matplotlib.pyplot import figure
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from gensim.models import Word2Vec
+from gensim.models import KeyedVectors
 
 
 def multi_classify(clusterer, X_test):
@@ -61,17 +62,26 @@ def plot_data(clusters, k, points, categories, method_name):
 	plt.show()
 	plt.savefig(method_name + '.png')
 
-def get_vectors_from_w2v(model, docs):
+def get_embeddings(model, words, dimension):
+	embeddings = []
+	for word in words:
+		try:
+			embeddings.append(model[word])
+		except:
+			embeddings.append(np.zeros(dimension))
+
+	return embeddings
+
+def get_vectors_from_w2v(model, docs, dimension):
 	vectors = []
 	for doc in docs:
-		vec = []
-		for word in doc.split():
-			mean_value = np.mean(model[word])
-			vec.append(mean_value)
-		vectors.append(vec)
+		embeddings = np.array(get_embeddings(model, doc, dimension))
+		doc_vector = np.empty([0])
+		for i in range(dimension):
+			doc_vector = np.append(doc_vector, np.mean(embeddings[:, i]))
 
+		vectors.append(doc_vector)
 	return vectors
-
 
 
 # read data
@@ -84,21 +94,24 @@ le.fit(df_train['category'])
 y_train = le.transform(df_train['category'])
 
 ######### document-embeddings #########
-tokenized_tweet = df_train['content'].apply(lambda x: x.split()) # tokenizing
-model_w2v = Word2Vec(tokenized_tweet,
-	size=200, # desired no. of features/independent variables
-	window=5, # context window size
-	min_count=2,
-	sg = 1, # 1 for skip-gram model
-	hs = 0,
-	negative = 10, # for negative sampling
-	workers= 2, # no.of cores
-	seed = 34)
+# tokenized_tweet = df_train['content'].apply(lambda x: x.split()) # tokenizing
+# model = Word2Vec(tokenized_tweet,
+# 	size=200, # desired no. of features/independent variables
+# 	window=5, # context window size
+# 	min_count=2,
+# 	sg = 1, # 1 for skip-gram model
+# 	hs = 0,
+# 	negative = 10, # for negative sampling
+# 	workers= 2, # no.of cores
+# 	seed = 34)
 
-model_w2v.train(tokenized_tweet, total_examples= df_train['content'].shape[0], epochs=20)
+# model.train(tokenized_tweet, total_examples= df_train['content'].shape[0], epochs=20)
+
+model = KeyedVectors.load_word2vec_format('../GoogleNews-vectors-negative300.bin',
+		binary=True)  
 
 # vectorization 
-vectors = get_vectors_from_w2v(model_w2v, df_train['content'])
+vectors = get_vectors_from_w2v(model, df_train['content'], model.vector_size)
 
 # clustering
 clusterer = KMeansClusterer(5, distance=cosine_distance)
@@ -110,7 +123,7 @@ pca_data = transformer.fit_transform(vectors)
 
 # plot data
 plt.figure(num=3, figsize=(10, 10))
-plot_data(clusters, 5, pca_data, y_train, 'w2v')
+plot_data(clusters, 5, pca_data, y_train, 'pca_w2v')
 
 
 
