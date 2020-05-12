@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, roc_curve, auc
 from statistics import stdev
 import matplotlib.pyplot as plt
 from nltk.cluster import KMeansClusterer, cosine_distance
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, TruncatedSVD
 from matplotlib.pyplot import figure
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
@@ -83,89 +83,87 @@ def get_vectors_from_w2v(model, docs, dimension):
 		vectors.append(doc_vector)
 	return vectors
 
+def plot_PCA_data(X_train, clusters, y_train, method_name):
+	# PCA dimension reductionality 
+	transformer = PCA(random_state=2020)
+	pca_data = transformer.fit_transform(X_train)
 
-# read data
-df_train = pd.read_csv("train_set.csv", sep='\t')
-df_train['content'] = df_train['content'].str.replace('\.|\,', '', regex=True)
+	# plot PCA data
+	plt.figure(num=1, figsize=(10, 10))
+	plt.xlim([-6, 20])
+	plt.ylim([-20, 20])
+	plot_data(clusters, 5, pca_data, y_train, method_name)	
 
-# labels
-le = preprocessing.LabelEncoder()
-le.fit(df_train['category'])
-y_train = le.transform(df_train['category'])
+def plot_SVD_data(X_train, clusters, y_train, method_name):
+	# SVD dimension reductionality 
+	svd = TruncatedSVD(random_state=42)
+	svd_data = svd.fit_transform(X_train)
 
-######### document-embeddings #########
-# tokenized_tweet = df_train['content'].apply(lambda x: x.split()) # tokenizing
-# model = Word2Vec(tokenized_tweet,
-# 	size=200, # desired no. of features/independent variables
-# 	window=5, # context window size
-# 	min_count=2,
-# 	sg = 1, # 1 for skip-gram model
-# 	hs = 0,
-# 	negative = 10, # for negative sampling
-# 	workers= 2, # no.of cores
-# 	seed = 34)
+	# plot PCA data
+	plt.figure(num=1, figsize=(10, 10))
+	plt.xlim([-6, 20])
+	plt.ylim([-20, 20])
+	plot_data(clusters, 5, svd_data, y_train, method_name)	
 
-# model.train(tokenized_tweet, total_examples= df_train['content'].shape[0], epochs=20)
+if __name__ == "__main__":
+	# read data
+	df_train = pd.read_csv("train_set.csv", sep='\t')
+	df_train['content'] = df_train['content'].str.replace('\.|\,', '', regex=True)
 
-model = KeyedVectors.load_word2vec_format('../GoogleNews-vectors-negative300.bin',
-		binary=True)  
-
-# vectorization 
-vectors = get_vectors_from_w2v(model, df_train['content'], model.vector_size)
-
-# clustering
-clusterer = KMeansClusterer(5, distance=cosine_distance)
-clusters = clusterer.cluster(vectors, True)
-
-# dimension reductionality
-transformer = PCA(random_state=2020)
-pca_data = transformer.fit_transform(vectors)
-
-# plot data
-plt.figure(num=3, figsize=(10, 10))
-plot_data(clusters, 5, pca_data, y_train, 'pca_w2v')
+	# labels
+	le = preprocessing.LabelEncoder()
+	le.fit(df_train['category'])
+	y_train = le.transform(df_train['category'])
 
 
+	######### CountVectorizer #########
+	# vectorization by CountVectorizer
+	count_vectorizer = CountVectorizer(stop_words='english')
+	X_train_count = count_vectorizer.fit_transform(df_train['content'])
 
-exit()
+	# clustering
+	clusterer = KMeansClusterer(5, distance=cosine_distance)
+	clusters = clusterer.cluster(X_train_count.toarray(), True)
 
+	# plot PCA data
+	plot_PCA_data(X_train_count.toarray(), clusters, y_train, 'PCA_count')
 
-######### CountVectorizer #########
-# vectorization by CountVectorizer
-count_vectorizer = CountVectorizer(stop_words='english')
-X_train_count = count_vectorizer.fit_transform(df_train['content'])
+	# plot SVD data
+	plot_SVD_data(X_train_count, clusters, y_train, 'SVD_count')
 
-# clustering
-clusterer = KMeansClusterer(5, distance=cosine_distance)
-clusters = clusterer.cluster(X_train_count.toarray(), True)
+	exit()
 
-# dimension reductionality
-transformer = PCA(random_state=2020)
-pca_data = transformer.fit_transform(X_train_count.toarray())
+	######### TfidfVectorizer #########
+	# vectorization by TfidfVectorizer
+	tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+	X_train_tfidf = tfidf_vectorizer.fit_transform(df_train['content'])
 
-# plot data
-plt.figure(num=1, figsize=(10, 10))
-plt.xlim([-6, 20])
-plt.ylim([-20, 20])
-plot_data(clusters, 5, pca_data, y_train, 'pca_count')
+	# clustering
+	clusterer = KMeansClusterer(5, distance=cosine_distance)
+	clusters = clusterer.cluster(X_train_tfidf.toarray(), True)
 
+	# plot PCA data
+	plot_PCA_data(X_train_tfidf.toarray(), clusters, y_train, 'PCA_tfidf')
 
-######### TfidfVectorizer #########
-# vectorization by TfidfVectorizer
-tfidf_vectorizer = TfidfVectorizer(stop_words='english')
-X_train_tfidf = tfidf_vectorizer.fit_transform(df_train['content'])
-
-# clustering
-clusterer = KMeansClusterer(5, distance=cosine_distance)
-clusters = clusterer.cluster(X_train_tfidf.toarray(), True)
-
-# dimension reductionality
-transformer = PCA(random_state=2020)
-pca_data = transformer.fit_transform(X_train_tfidf.toarray())
-
-# plot data
-plt.figure(num=2, figsize=(10, 10))
-plot_data(clusters, 5, pca_data, y_train, 'pca_tfidf')
+	# plot SVD data
+	plot_SVD_data(X_train_tfidf, clusters, y_train, 'SVD_tfidf')
 
 
-# print(clusterer.classify(X_test_count.toarray()))
+	######### document-embeddings #########
+	model = KeyedVectors.load_word2vec_format('../GoogleNews-vectors-negative300.bin',
+			binary=True)  
+
+	# vectorization 
+	w2v_vectors = get_vectors_from_w2v(model, df_train['content'], model.vector_size)
+
+	# clustering
+	clusterer = KMeansClusterer(5, distance=cosine_distance)
+	clusters = clusterer.cluster(w2v_vectors, True)
+
+	# plot PCA data
+	plot_PCA_data(w2v_vectors, clusters, y_train, 'PCA_w2v')
+
+	# plot SVD data
+	plot_SVD_data(w2v_vectors, clusters, y_train, 'SVD_w2v')
+
+	# print(clusterer.classify(X_test_count.toarray()))
