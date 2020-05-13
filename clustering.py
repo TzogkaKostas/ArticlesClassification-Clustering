@@ -137,14 +137,13 @@ if __name__ == "__main__":
 	clusters = clusterer.cluster(X_train_count.toarray(), True)
 
 	# plot PCA data
-	# plot_PCA_data(X_train_count.toarray(), clusters, y_train, 'PCA_count')
+	plot_PCA_data(X_train_count.toarray(), clusters, y_train, 'PCA_count')
 
 	# plot SVD data
-	# plot_SVD_data(X_train_count, clusters, y_train, 'SVD_count')
+	plot_SVD_data(X_train_count, clusters, y_train, 'SVD_count')
 
-	# plot SVD data
+	# plot ICA data
 	plot_ICA_data(X_train_count.toarray(), clusters, y_train, 'ICA_count')
-	exit()
 
 	######### TfidfVectorizer #########
 	# vectorization by TfidfVectorizer
@@ -160,6 +159,9 @@ if __name__ == "__main__":
 
 	# plot SVD data
 	plot_SVD_data(X_train_tfidf, clusters, y_train, 'SVD_tfidf')
+
+	# plot ICA data
+	plot_ICA_data(X_train_count.toarray(), clusters, y_train, 'ICA_tfidf')
 
 
 	######### document-embeddings #########
@@ -179,4 +181,5 @@ if __name__ == "__main__":
 	# plot SVD data
 	plot_SVD_data(w2v_vectors, clusters, y_train, 'SVD_w2v')
 
-	# print(clusterer.classify(X_test_count.toarray()))
+	# plot ICA data
+	plot_ICA_data(X_train_count.toarray(), clusters, y_train, 'ICA_w2v')

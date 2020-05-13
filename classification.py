@@ -173,30 +173,12 @@ predictions_count = clf.predict(X_test_count)
 print("SUPPORT VECTOR MACHINES (Bow):")
 evaluation(clf, X_train_count, y_train, y_test, predictions_count, False)
 
-######### beat #########
-# vectorization by CountVectorizer
-count_vectorizer = CountVectorizer(stop_words='english')
-preprocessed_train_data = data_preprocessing(df_train['content'].tolist())
-preprocessed_test_data = data_preprocessing(df_test['content'].tolist())
-X_train_count = count_vectorizer.fit_transform(preprocessed_train_data)
-X_test_count = count_vectorizer.transform(preprocessed_test_data)
 
-# fit
-clf = svm.SVC(probability=True)
-
-clf.fit(X_train_count, y_train)
-
-# predict
-predictions_count = clf.predict(X_test_count)
-
-# print evaluations scores
-print("SUPPORT VECTOR MACHINES (beat):")
-evaluation(clf, X_train_count, y_train, y_test, predictions_count, False)
-
-exit()
 ######### TfidfVectorizer #########
 # fit
 clf = svm.SVC(probability=True)
+# clf = GridSearchCV(clf, {'kernel':('linear', 'rbf'), 'C':[1, 10]})
+
 clf.fit(X_train_tfidf, y_train)
 
 # predict
@@ -286,3 +268,25 @@ predictions_count = clf.predict(X_test_tfidf)
 print("k-nearest neighbors (TfIdf):")
 evaluation(clf, X_train_tfidf, y_train, y_test, predictions_count, False)
 print("\n")
+
+######### beat #########
+# vectorization by CountVectorizer
+count_vectorizer = CountVectorizer(stop_words='english')
+preprocessed_train_data = data_preprocessing(df_train['content'].tolist())
+preprocessed_test_data = data_preprocessing(df_test['content'].tolist())
+X_train_count = count_vectorizer.fit_transform(preprocessed_train_data)
+X_test_count = count_vectorizer.transform(preprocessed_test_data)
+
+# fit
+clf = svm.SVC(probability=True)
+
+clf.fit(X_train_count, y_train)
+
+# predict
+predictions_count = clf.predict(X_test_count)
+
+# print evaluations scores
+print("SUPPORT VECTOR MACHINES (beat):")
+evaluation(clf, X_train_count, y_train, y_test, predictions_count, False)
+
+exit()
