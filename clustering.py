@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, roc_curve, auc
 from statistics import stdev
 import matplotlib.pyplot as plt
 from nltk.cluster import KMeansClusterer, cosine_distance
-from sklearn.decomposition import PCA, TruncatedSVD
+from sklearn.decomposition import PCA, TruncatedSVD, FastICA
 from matplotlib.pyplot import figure
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
@@ -103,7 +103,18 @@ def plot_SVD_data(X_train, clusters, y_train, method_name):
 	plt.figure(num=1, figsize=(10, 10))
 	plt.xlim([-6, 20])
 	plt.ylim([-20, 20])
-	plot_data(clusters, 5, svd_data, y_train, method_name)	
+	plot_data(clusters, 5, svd_data, y_train, method_name)
+
+def plot_ICA_data(X_train, clusters, y_train, method_name):
+	# SVD dimension reductionality 
+	ica = FastICA(random_state=42)
+	ica_data = ica.fit_transform(X_train)
+
+	# plot ICA data
+	plt.figure(num=1, figsize=(10, 10))
+	plt.xlim([-6, 20])
+	plt.ylim([-20, 20])
+	plot_data(clusters, 5, ica_data, y_train, method_name)
 
 if __name__ == "__main__":
 	# read data
@@ -126,11 +137,13 @@ if __name__ == "__main__":
 	clusters = clusterer.cluster(X_train_count.toarray(), True)
 
 	# plot PCA data
-	plot_PCA_data(X_train_count.toarray(), clusters, y_train, 'PCA_count')
+	# plot_PCA_data(X_train_count.toarray(), clusters, y_train, 'PCA_count')
 
 	# plot SVD data
-	plot_SVD_data(X_train_count, clusters, y_train, 'SVD_count')
+	# plot_SVD_data(X_train_count, clusters, y_train, 'SVD_count')
 
+	# plot SVD data
+	plot_ICA_data(X_train_count.toarray(), clusters, y_train, 'ICA_count')
 	exit()
 
 	######### TfidfVectorizer #########

@@ -17,7 +17,11 @@ import scikitplot as skplt
 from sklearn.model_selection import cross_val_predict
 from itertools import cycle
 from sklearn.preprocessing import label_binarize
-
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize 
+import nltk
+from nltk import pos_tag
+from nltk.corpus import wordnet as wn
 
 
 class KNN_classifier(BaseEstimator, ClassifierMixin):
@@ -96,6 +100,40 @@ def roc_evaluation(clf, X_train, y_train, labels):
 	plt.show()
 	plt.savefig('roc_plot.png')
 
+def wordnet_pos_code(tag):
+	if tag in ['JJ', 'JJR', 'JJS']:
+		return wn.ADJ
+	elif tag in ['RB', 'RBR', 'RBS']:
+		return wn.ADV
+	elif tag in ['NN', 'NNS', 'NNP', 'NNPS']:
+		return wn.NOUN
+	elif tag in ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']:
+		return wn.VERB
+	return wn.NOUN 
+
+def lemmas(data):
+	lemmatizer = WordNetLemmatizer() 
+	return [lemmatizer.lemmatize(token, pos=wordnet_pos_code(tag)) for token, tag in data]
+
+def lemmatization(data):
+	try:
+		data = lemmas(data)
+	except LookupError:
+		nltk.download('punkt')
+		nltk.download('wordnet')
+		nltk.download('averaged_perceptron_tagger')
+		data = lemmas(data)
+	return ' '.join(data)
+
+def data_preprocessing(docs):
+	new_docs = []
+	for doc in docs:
+		doc = pos_tag(word_tokenize(doc))
+		new_docs.append(lemmatization(doc))
+
+	return new_docs
+
+
 # read data
 df_train = pd.read_csv("train_set.csv", sep='\t')
 df_train['content'] = df_train['content'].str.replace('\.|\,', '', regex=True)
@@ -124,7 +162,7 @@ y_test = le.transform(df_test['category'])
 ######### CountVectorizer #########
 # fit
 clf = svm.SVC(probability=True)
-clf = GridSearchCV(clf, {'kernel':('linear', 'rbf'), 'C':[1, 10]})
+# clf = GridSearchCV(clf, {'kernel':('linear', 'rbf'), 'C':[1, 10]})
 
 clf.fit(X_train_count, y_train)
 
@@ -133,8 +171,29 @@ predictions_count = clf.predict(X_test_count)
 
 # print evaluations scores
 print("SUPPORT VECTOR MACHINES (Bow):")
-evaluation(clf, X_train_count, y_train, y_test, predictions_count)
+evaluation(clf, X_train_count, y_train, y_test, predictions_count, False)
 
+######### beat #########
+# vectorization by CountVectorizer
+count_vectorizer = CountVectorizer(stop_words='english')
+preprocessed_train_data = data_preprocessing(df_train['content'].tolist())
+preprocessed_test_data = data_preprocessing(df_test['content'].tolist())
+X_train_count = count_vectorizer.fit_transform(preprocessed_train_data)
+X_test_count = count_vectorizer.transform(preprocessed_test_data)
+
+# fit
+clf = svm.SVC(probability=True)
+
+clf.fit(X_train_count, y_train)
+
+# predict
+predictions_count = clf.predict(X_test_count)
+
+# print evaluations scores
+print("SUPPORT VECTOR MACHINES (beat):")
+evaluation(clf, X_train_count, y_train, y_test, predictions_count, False)
+
+exit()
 ######### TfidfVectorizer #########
 # fit
 clf = svm.SVC(probability=True)
@@ -213,7 +272,7 @@ predictions_count = clf.predict(X_test_count)
 
 # print evaluations scores
 print("k-nearest neighbors (Bow):")
-evaluation(clf, X_train_count, y_train, y_test, predictions_count)
+evaluation(clf, X_train_count, y_train, y_test, predictions_count, False)
 
 ######### TfidfVectorizer #########
 # fit
