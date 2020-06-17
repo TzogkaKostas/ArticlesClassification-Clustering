@@ -90,8 +90,6 @@ def plot_PCA_data(X_train, clusters, y_train, method_name):
 
 	# plot PCA data
 	plt.figure(num=1, figsize=(10, 10))
-	plt.xlim([-6, 20])
-	plt.ylim([-20, 20])
 	plot_data(clusters, 5, pca_data, y_train, method_name)	
 
 def plot_SVD_data(X_train, clusters, y_train, method_name):
@@ -101,19 +99,14 @@ def plot_SVD_data(X_train, clusters, y_train, method_name):
 
 	# plot PCA data
 	plt.figure(num=1, figsize=(10, 10))
-	plt.xlim([-6, 20])
-	plt.ylim([-20, 20])
 	plot_data(clusters, 5, svd_data, y_train, method_name)
 
 def plot_ICA_data(X_train, clusters, y_train, method_name):
 	# SVD dimension reductionality 
-	ica = FastICA(random_state=42)
+	ica = FastICA(n_components=2, random_state=42)
 	ica_data = ica.fit_transform(X_train)
 
 	# plot ICA data
-	plt.figure(num=1, figsize=(10, 10))
-	plt.xlim([-6, 20])
-	plt.ylim([-20, 20])
 	plot_data(clusters, 5, ica_data, y_train, method_name)
 
 if __name__ == "__main__":
@@ -137,12 +130,16 @@ if __name__ == "__main__":
 	clusters = clusterer.cluster(X_train_count.toarray(), True)
 
 	# plot PCA data
-	plot_PCA_data(X_train_count.toarray(), clusters, y_train, 'PCA_count')
+	# plot_PCA_data(X_train_count.toarray(), clusters, y_train, 'PCA_count')
 
 	# plot SVD data
-	plot_SVD_data(X_train_count, clusters, y_train, 'SVD_count')
+	# plot_SVD_data(X_train_count, clusters, y_train, 'SVD_count')
 
 	# plot ICA data
+	print("aa")
+	plt.figure(num=11, figsize=(10, 10))
+	plt.xlim([-0.12, 0.05])
+	plt.ylim([-0.05, 0.08])
 	plot_ICA_data(X_train_count.toarray(), clusters, y_train, 'ICA_count')
 
 	######### TfidfVectorizer #########
@@ -155,12 +152,16 @@ if __name__ == "__main__":
 	clusters = clusterer.cluster(X_train_tfidf.toarray(), True)
 
 	# plot PCA data
-	plot_PCA_data(X_train_tfidf.toarray(), clusters, y_train, 'PCA_tfidf')
+	# plot_PCA_data(X_train_tfidf.toarray(), clusters, y_train, 'PCA_tfidf')
 
 	# plot SVD data
-	plot_SVD_data(X_train_tfidf, clusters, y_train, 'SVD_tfidf')
+	# plot_SVD_data(X_train_tfidf, clusters, y_train, 'SVD_tfidf')
 
 	# plot ICA data
+	print("bb")
+	plt.figure(num=22, figsize=(10, 10))
+	plt.xlim([-0.08, 0.03])
+	plt.ylim([-0.05, 0.08])
 	plot_ICA_data(X_train_count.toarray(), clusters, y_train, 'ICA_tfidf')
 
 
@@ -176,10 +177,13 @@ if __name__ == "__main__":
 	clusters = clusterer.cluster(w2v_vectors, True)
 
 	# plot PCA data
-	plot_PCA_data(w2v_vectors, clusters, y_train, 'PCA_w2v')
+	# plot_PCA_data(w2v_vectors, clusters, y_train, 'PCA_w2v')
 
 	# plot SVD data
-	plot_SVD_data(w2v_vectors, clusters, y_train, 'SVD_w2v')
+	# plot_SVD_data(w2v_vectors, clusters, y_train, 'SVD_w2v')
 
 	# plot ICA data
-	plot_ICA_data(X_train_count.toarray(), clusters, y_train, 'ICA_w2v')
+	plt.figure(num=33, figsize=(10, 10))
+	# plt.xlim([-0.08, 0.06])
+	# plt.ylim([-0.05, 0.08])
+	plot_ICA_data(w2v_vectors, clusters, y_train, 'ICA_w2v')
