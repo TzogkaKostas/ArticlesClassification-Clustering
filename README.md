@@ -1,4 +1,4 @@
-# data_mining2
+# Articles Classification and Clustering
 
 Performed classification (SVM, Random Forrests, Naive Bayes, K-Nearest
 Neighbor) and clustering (K-means) on news articles. Precision / Recall /
